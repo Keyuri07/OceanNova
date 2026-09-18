@@ -1,0 +1,32 @@
+# =============================================================================
+# File: .gitignore
+# Purpose: Tell Git which files to ignore (not upload to GitHub)
+# Author: Keyuri Ramani
+# Date: September 2026
+# =============================================================================
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environment
+venv/
+env/
+ENV/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Data files (too large for GitHub)
+*.nc
+*.zarr
+*.db
+*.sqlite
+
+# Environment variables
+.env
