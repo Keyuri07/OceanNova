@@ -1,124 +1,164 @@
 # =============================================================================
 # File: main.py
-# Purpose: FastAPI backend to serve ocean temperature data via REST API
+# Purpose: FastAPI backend to serve ocean temperature data with DEPTH dimension
 # Author: Keyuri Ramani
 # Date: September 2026
 #
 # What this code does:
-# - Creates a web API using FastAPI
-# - Loads NetCDF data when server starts
-# - Provides endpoints to query temperature data at specific times
-# - Returns data in JSON format for the frontend to use
-# - This is the backend that Person 2's frontend will call
+# - Loads ocean temperature data (time, depth, lat, lon, temperature)
+# - Provides API endpoint: /api/temperature?depth=100&time=...
+# - Returns temperature grid at specified depth and time
+# - This is what Person 2's frontend will call for 3D visualization
 # =============================================================================
 
-# Import FastAPI for creating the web API
 from fastapi import FastAPI
-# Import xarray for working with NetCDF data
+from fastapi.middleware.cors import CORSMiddleware
 import xarray as xr
-# Import json for data conversion
-import json
+import numpy as np
 
-# Create the FastAPI application
+# Create FastAPI application
 app = FastAPI(
     title="OceanView3D API",
-    description="Backend API for 3D Ocean Data Visualization Platform",
-    version="1.0.0"
+    description="Backend API for 3D Ocean Data Visualization - Ocean Temperature with Depth",
+    version="2.0.0"
 )
 
-# Load the dataset once when the server starts
-# This avoids reloading the file for every API request (faster performance)
+# Add CORS middleware (allows frontend to call API from different domain)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # For development, allow all origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Load ocean dataset when server starts
 print("=" * 60)
-print("LOADING DATASET...")
-ds = xr.open_dataset("sample_air_temp.nc")
-print(f"✅ Dataset loaded successfully!")
-print(f"   Variables: {list(ds.data_vars)}")
-print(f"   Time steps: {len(ds.time)}")
-print(f"   Grid size: {len(ds.lat)} x {len(ds.lon)}")
+print("LOADING OCEAN TEMPERATURE DATASET...")
 print("=" * 60)
 
-# Define the root endpoint (homepage)
+try:
+    ds = xr.open_dataset("ocean_temperature.nc")
+    print(f"✅ Dataset loaded successfully!")
+    print(f"   Variables: {list(ds.data_vars)}")
+    print(f"   Dimensions: {dict(ds.dims)}")
+    print(f"   Depth levels: {ds.depth.values}")
+    print(f"   Time steps: {len(ds.time)}")
+    print(f"   Grid: {len(ds.lat)} × {len(ds.lon)}")
+except Exception as e:
+    print(f"❌ Error loading dataset: {e}")
+    print("Make sure ocean_temperature.nc file exists in the same folder!")
+    raise
+
+print("=" * 60)
+
+# Root endpoint
 @app.get("/")
 def read_root():
     """
-    Root endpoint - Welcome message
+    Welcome message and API documentation
     """
     return {
-        "message": "Welcome to OceanView3D API!",
+        "message": "Welcome to OceanView3D API v2.0!",
+        "description": "Ocean temperature data with depth dimension",
         "documentation": "/docs",
         "endpoints": {
-            "temperature": "/api/temperature?time=2013-01-01T00:00:00"
+            "temperature_at_depth": "/api/temperature?depth=100&time=2025-01-01T00:00:00",
+            "available_depths": "/api/available_depths",
+            "available_times": "/api/available_times"
         }
     }
 
-# Define the temperature data endpoint
+# Main endpoint: Get temperature at specific depth and time
 @app.get("/api/temperature")
-def get_temperature(time: str = "2013-01-01T00:00:00"):
+def get_temperature(depth: float = 100, time: str = "2025-01-01T00:00:00"):
     """
-    Get air temperature data at a specific time.
+    Get ocean temperature at a specific depth and time.
     
     Parameters:
-    - time: Timestamp in ISO format (e.g., '2013-01-01T00:00:00')
+    - depth: Depth in meters (e.g., 0, 100, 500, 1000)
+    - time: Timestamp in ISO format (e.g., '2025-01-01T00:00:00')
     
     Returns:
-    - JSON object with temperature data (latitude, longitude, temperature values)
+    - JSON with temperature grid (latitude, longitude, temperature values)
     """
     try:
-        # Select data at the requested time
-        air_temp = ds['air'].sel(time=time)
+        # Select data at requested depth and time
+        temp_data = ds['temperature'].sel(depth=depth, time=time, method='nearest')
         
-        # Convert temperature from Kelvin to Celsius
-        temp_celsius = air_temp.values - 273.15
+        # Get coordinate values
+        latitudes = temp_data.lat.values.tolist()
+        longitudes = temp_data.lon.values.tolist()
+        temperature = temp_data.values.tolist()
         
-        # Prepare response in JSON format
+        # Prepare response
         response = {
-            "time": str(air_temp.time.values),
-            "variable": "air_temperature",
-            "units": "Celsius",
+            "depth": float(depth),
+            "time": str(temp_data.time.values),
+            "variable": "sea_water_temperature",
+            "units": "degC",
             "shape": {
-                "latitude": len(air_temp.lat.values),
-                "longitude": len(air_temp.lon.values)
+                "latitude": len(latitudes),
+                "longitude": len(longitudes)
             },
             "data": {
-                "latitude": air_temp.lat.values.tolist(),
-                "longitude": air_temp.lon.values.tolist(),
-                "temperature_celsius": temp_celsius.tolist()
+                "latitude": latitudes,
+                "longitude": longitudes,
+                "temperature": temperature
+            },
+            "stats": {
+                "min_temp": float(np.nanmin(temp_data.values)),
+                "max_temp": float(np.nanmax(temp_data.values)),
+                "mean_temp": float(np.nanmean(temp_data.values))
             }
         }
         
         return response
         
     except Exception as e:
-        # Handle errors (e.g., invalid time)
         return {
             "error": f"Failed to retrieve data: {str(e)}",
-            "available_times": [
-                "2013-01-01T00:00:00",
-                "2013-01-01T06:00:00",
-                "2013-01-01T12:00:00"
-            ]
+            "available_depths": ds.depth.values.tolist(),
+            "available_times": [str(t.values) for t in ds.time.values[:5]]
         }
 
-# Define an endpoint to list available times
+# Endpoint: Get list of available depths
+@app.get("/api/available_depths")
+def get_available_depths():
+    """
+    Get list of all available depth levels.
+    
+    Returns:
+    - List of depth values in meters
+    """
+    depths = ds.depth.values.tolist()
+    
+    return {
+        "total_depths": len(depths),
+        "min_depth": depths[0],
+        "max_depth": depths[-1],
+        "depths": depths
+    }
+
+# Endpoint: Get list of available times
 @app.get("/api/available_times")
 def get_available_times():
     """
-    Get list of all available timestamps in the dataset.
+    Get list of all available timestamps.
     
     Returns:
     - List of timestamps (ISO format strings)
     """
-    # Convert datetime64 to strings
     times = [str(t.values) for t in ds.time.values]
     
     return {
         "total_times": len(times),
         "first_time": times[0],
         "last_time": times[-1],
-        "sample_times": times[:10]  # First 10 times as examples
+        "sample_times": times[:10]
     }
 
-# This code runs when you start the server with: uvicorn main:app --reload
+# Run server: uvicorn main:app --reload
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
