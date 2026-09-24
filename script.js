@@ -1,4 +1,4 @@
-// Simple variables
+// State variables
 let currentDepth = 100;
 let currentTime = "2025-01-01";
 let isPlaying = false;
@@ -7,27 +7,7 @@ let animationTimer = null;
 const DEPTHS = [0, 100, 500, 1000];
 const TIMES = ["2025-01-01", "2025-01-02", "2025-01-03", "2025-01-04", "2025-01-05"];
 
-// Show/hide loading
-function showLoading() {
-  document.getElementById("loading").style.display = "block";
-}
-
-function hideLoading() {
-  document.getElementById("loading").style.display = "none";
-}
-
-// Show error
-function showError(message) {
-  const errorDiv = document.getElementById("error");
-  errorDiv.textContent = message;
-  errorDiv.style.display = "block";
-  
-  setTimeout(() => {
-    errorDiv.style.display = "none";
-  }, 5000);
-}
-
-// Depth slider
+// Depth Slider Event
 document.getElementById("depthSlider").addEventListener("input", (e) => {
   const index = Number(e.target.value);
   currentDepth = DEPTHS[index];
@@ -35,7 +15,7 @@ document.getElementById("depthSlider").addEventListener("input", (e) => {
   document.getElementById("status").textContent = "Depth: " + currentDepth + " m";
 });
 
-// Time slider
+// Time Slider Event
 document.getElementById("timeSlider").addEventListener("input", (e) => {
   const index = Number(e.target.value);
   currentTime = TIMES[index];
@@ -43,10 +23,19 @@ document.getElementById("timeSlider").addEventListener("input", (e) => {
   document.getElementById("status").textContent = "Time: " + currentTime;
 });
 
-// Play/Pause button
+// Variable Selector Change
+document.getElementById("variableSelector").addEventListener("change", (e) => {
+  const selected = e.target.value;
+  if (selected !== "temperature") {
+    alert("Notice: Only Temperature dataset is active in the current MVP.");
+    e.target.value = "temperature";
+  }
+});
+
+// Play / Pause Animation
 document.getElementById("playButton").addEventListener("click", () => {
   const button = document.getElementById("playButton");
-  
+
   if (isPlaying) {
     clearInterval(animationTimer);
     isPlaying = false;
@@ -56,7 +45,7 @@ document.getElementById("playButton").addEventListener("click", () => {
     isPlaying = true;
     button.textContent = "❚❚ Pause";
     document.getElementById("status").textContent = "Playing...";
-    
+
     animationTimer = setInterval(() => {
       const slider = document.getElementById("timeSlider");
       let currentIndex = Number(slider.value);
@@ -67,7 +56,7 @@ document.getElementById("playButton").addEventListener("click", () => {
   }
 });
 
-// Reset button
+// Reset Button
 document.getElementById("resetButton").addEventListener("click", () => {
   document.getElementById("depthSlider").value = 1;
   document.getElementById("timeSlider").value = 0;
@@ -78,6 +67,22 @@ document.getElementById("resetButton").addEventListener("click", () => {
   document.getElementById("status").textContent = "Reset to default";
 });
 
-// Test: Update colorbar (fake data for now)
-document.getElementById("minValue").textContent = "18.5 °C";
-document.getElementById("maxValue").textContent = "27.3 °C";
+// Keyboard Shortcuts (Spacebar & Arrow keys)
+document.addEventListener("keydown", (e) => {
+  if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
+
+  if (e.code === "Space") {
+    e.preventDefault();
+    document.getElementById("playButton").click();
+  }
+  if (e.code === "ArrowUp") {
+    const slider = document.getElementById("depthSlider");
+    slider.value = Math.min(Number(slider.value) + 1, 3);
+    slider.dispatchEvent(new Event("input"));
+  }
+  if (e.code === "ArrowDown") {
+    const slider = document.getElementById("depthSlider");
+    slider.value = Math.max(Number(slider.value) - 1, 0);
+    slider.dispatchEvent(new Event("input"));
+  }
+});
