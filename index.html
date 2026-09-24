@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>OceanView3D - Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="panel">
+    <h1>🌊 OceanView3D</h1>
+    
+    <label>Depth: <strong id="depthValue">100 m</strong></label>
+    <input type="range" id="depthSlider" min="0" max="3" value="1">
+    
+    <label>Time: <strong id="timeValue">2025-01-01</strong></label>
+    <input type="range" id="timeSlider" min="0" max="4" value="0">
+    
+    <button id="playButton">▶ Play</button>
+    <button id="resetButton">Reset</button>
+    
+    <div id="colorbar">
+      <div class="gradient"></div>
+      <div>
+        <span id="minValue">-- °C</span>
+        <span id="maxValue">-- °C</span>
+      </div>
+    </div>
+    
+    <p id="status">Ready</p>
+  </div>
+  
+  <div id="loading" style="display:none;">Loading...</div>
+  <div id="error" style="display:none; color:red;"></div>
+  
+  <script src="script.js"></script>
+</body>
+</html>
