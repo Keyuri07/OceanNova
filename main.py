@@ -149,7 +149,7 @@ def get_available_times():
     Returns:
     - List of timestamps (ISO format strings)
     """
-    times = [str(t.values) for t in ds.time.values]
+    times = [str(t) for t in ds.time.values]
     
     return {
         "total_times": len(times),
@@ -162,3 +162,54 @@ def get_available_times():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+# ============================================================
+# ARGO FLOATS - SAMPLE OBSERVATION DATA
+# ============================================================
+
+ARGO_FLOATS = [
+    {
+        "id": "ARGO1",
+        "lat": 15.5,
+        "lon": 72.3,
+        "depth": 100,
+        "time": "2025-01-01T00:00:00",
+        "temperature": 22.5
+    },
+    {
+        "id": "ARGO2",
+        "lat": 16.2,
+        "lon": 73.1,
+        "depth": 150,
+        "time": "2025-01-01T06:00:00",
+        "temperature": 21.8
+    },
+    {
+        "id": "ARGO3",
+        "lat": 17.1,
+        "lon": 74.2,
+        "depth": 200,
+        "time": "2025-01-01T12:00:00",
+        "temperature": 20.9
+    },
+    {
+        "id": "ARGO4",
+        "lat": 18.0,
+        "lon": 71.5,
+        "depth": 100,
+        "time": "2025-01-01T18:00:00",
+        "temperature": 23.1
+    },
+    {
+        "id": "ARGO5",
+        "lat": 14.8,
+        "lon": 75.0,
+        "depth": 300,
+        "time": "2025-01-02T00:00:00",
+        "temperature": 19.7
+    }
+]
+
+
+@app.get("/api/argo_floats")
+def get_argo_floats():
+    return ARGO_FLOATS

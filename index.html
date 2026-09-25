@@ -1,83 +1,60 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OceanView3D - Dashboard</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>OceanView3D</title>
+
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.145/Build/Cesium/Cesium.js"></script>
+    <link href="https://cesium.com/downloads/cesiumjs/releases/1.145/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div id="panel">
+    <h1>🌊 OceanView3D</h1>
+    
+    <label>Depth: <strong id="depthValue">100 m</strong></label>
+    <input type="range" id="depthSlider" min="0" max="3" value="1">
+    
+    <label>Time: <strong id="timeValue">2025-01-01</strong></label>
+    <input type="range" id="timeSlider" min="0" max="4" value="0">
+    
+    <button id="playButton">▶ Play</button>
+    <button id="resetButton">Reset</button>
+    <div class="speed-control">
+    <label for="speedSlider">Speed:</label>
 
-  <aside id="panel">
-    <h1>🌊 OceanView<span>3D</span></h1>
+    <input
+        type="range"
+        id="speedSlider"
+        min="1"
+        max="10"
+        value="5"
+        step="1"
+    />
 
-    <!-- Variable Selector -->
-    <div class="control-group">
-      <label for="variableSelector">Variable</label>
-      <select id="variableSelector">
-        <option value="temperature">Sea Water Temperature (°C)</option>
-        <option value="salinity">Salinity (PSU) - Future</option>
-        <option value="currents">Current Vectors (m/s) - Future</option>
-      </select>
-    </div>
-
-    <!-- Depth Slider -->
-    <div class="control-group">
-      <div class="label-row">
-        <label for="depthSlider">Depth</label>
-        <strong id="depthValue">100 m</strong>
-      </div>
-      <input type="range" id="depthSlider" min="0" max="3" value="1">
-      <div class="range-hint"><span>0m (Surface)</span><span>1000m (Deep)</span></div>
-    </div>
-
-    <!-- Time Slider -->
-    <div class="control-group">
-      <div class="label-row">
-        <label for="timeSlider">Time</label>
-        <strong id="timeValue">2025-01-01</strong>
-      </div>
-      <input type="range" id="timeSlider" min="0" max="4" value="0">
-      <div class="range-hint"><span>2025-01-01</span><span>2025-01-05</span></div>
-    </div>
-
-    <!-- Buttons -->
-    <div class="button-row">
-      <button id="playButton" type="button">▶ Play</button>
-      <button id="resetButton" type="button">Reset</button>
-    </div>
-
-    <!-- In-situ Sensor Marker Badge -->
-    <div class="sensor-badge">
-      <span class="dot red"></span> Argo Profiling Floats Active
-    </div>
-
-    <!-- Colorbar -->
+    <span id="speedValue">5x</span>
+</div>
     <div id="colorbar">
-      <div class="colorbar-header">
-        <span>Thermal Spectrum</span>
-        <span>Temp (°C)</span>
-      </div>
       <div class="gradient"></div>
-      <div class="colorbar-labels">
-        <span id="minValue">18.5 °C</span>
-        <span id="maxValue">27.3 °C</span>
+      <div>
+        <span id="minValue">-- °C</span>
+        <span id="maxValue">-- °C</span>
       </div>
     </div>
-
-    <!-- Status Text -->
-    <p id="status">Depth: 100 m</p>
-  </aside>
-
-  <!-- Loading Overlay -->
-  <div id="loading" style="display: none;">
-    <div class="spinner"></div>
-    <p>Loading ocean data...</p>
+    
+    <p id="status">Ready</p>
   </div>
-
-  <!-- Error Alert -->
-  <div id="error" style="display: none;"></div>
-
+  
+  <div id="loading" style="display:none;">Loading...</div>
+  <div id="error" style="display:none;"></div>
+  <div id="cesiumContainer"></div>
+  <div id="loadingSpinner" style="display: none;">
+    <div class="spinner"></div>
+    <p>Loading data...</p>
+</div>
   <script src="script.js"></script>
 </body>
-</html>    
+</html>
